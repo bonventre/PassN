@@ -1,0 +1,64 @@
+#pass1 for data from CRV modules at Wideband
+
+#contact: R. Ehrlich
+
+#include "mu2e-trig-config/core/trigProducers.fcl"
+#include "Offline/fcl/standardProducers.fcl"
+#include "Offline/fcl/standardServices.fcl"
+#include "Offline/CRVResponse/fcl/prolog.fcl"
+#include "EventNtuple/fcl/prolog.fcl"
+
+process_name : CrvPass1EventNtuples
+
+services :
+{
+  @table::Services.Core
+  @table::Services.Reco
+}
+
+source :
+{
+  module_type : RootInput
+  fileNames   : @nil
+  maxEvents   : -1
+}
+
+physics :
+{
+  producers :
+  {
+    @table::EventNtuple.producers
+  }
+  analyzers :
+  {
+    @table::EventNtuple.analyzers
+  }
+
+  t1 : [ @sequence::EventNtuple.PathNoMC ]
+  e1 : [ @sequence::EventNtuple.EndPathNoMC ]
+
+  trigger_paths  : [t1]
+  end_paths      : [e1]
+
+}
+
+#include "Production/JobConfig/common/epilog.fcl"
+physics.analyzers.EventNtuple.mc.fill : false
+physics.analyzers.EventNtuple.trk.fill : false
+physics.analyzers.EventNtuple.calo.fill : false
+physics.analyzers.EventNtuple.RecoCountTag : ""
+physics.analyzers.EventNtuple.PBTTag : ""
+physics.analyzers.EventNtuple.hasCRV : false  #false prevents skipping events without CRV content in the ntuple
+physics.analyzers.EventNtuple.FillTriggerInfo : false
+physics.analyzers.EventNtuple.crv.digisTag : "CrvDigi"
+physics.analyzers.EventNtuple.crv.coincidencesTag: "CrvCoincidenceClusterFinder"
+physics.analyzers.EventNtuple.crv.recoPulsesTag: "CrvRecoPulses"
+physics.analyzers.EventNtuple.crv.fillDigis : true
+physics.analyzers.EventNtuple.crv.fillPulses : true
+physics.analyzers.EventNtuple.crv.keepUnclusteredPulses : true
+
+services.TFileService.fileName : "crvRecoExtracted_EventNtuples.root"
+services.GeometryService.inputFile: "Offline/Mu2eG4/geom/geom_common_extracted.txt"
+services.TimeTracker.printSummary: true
+services.scheduler.wantSummary: true
+services.message.destinations.log.outputStatistics : true

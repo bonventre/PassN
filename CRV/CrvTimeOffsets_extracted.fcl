@@ -26,27 +26,49 @@ physics :
 {
   analyzers :
   {
-    CrvTimingStudies:
+    CrvTimeOffsets:
     {
-      module_type             : CrvTimingStudies
+      module_type             : CrvTimeOffsets
       crvRecoPulseModuleLabel : CrvRecoPulses
-      PEthreshold             : 10  //PEs
+      PEthreshold             : 16  //PEs
       removeTimeOffsets       : true
+      calibFileName           : "timeOffsetsExtracted.txt"
+      pdfFileName             : "timeOffsetsExtracted.pdf"
+      specialFEBsType1        : []
+      specialFEBsType2        : [28,29]
+      moduleConfigs           : [
+                                  {moduleName: "EX_0"   firstFEB:  0    sides: 2    muonTaggers: false   neighborName: "EX_1"},
+                                  {moduleName: "EX_1"   firstFEB:  4    sides: 2    muonTaggers: false   neighborName: "EX_2"},
+                                  {moduleName: "EX_2"   firstFEB:  8    sides: 2    muonTaggers: false   neighborName: "EX_3"},
+                                  {moduleName: "EX_3"   firstFEB: 12    sides: 2    muonTaggers: false   neighborName: ""},
+                                  {moduleName: "T1_0"   firstFEB: 24    sides: 1    muonTaggers: false   neighborName: "T1_1"},
+                                  {moduleName: "T1_1"   firstFEB: 26    sides: 1    muonTaggers: false   neighborName: ""},
+                                  {moduleName: "T2_0"   firstFEB: 16    sides: 2    muonTaggers: false   neighborName: "T2_1"},
+                                  {moduleName: "T2_1"   firstFEB: 20    sides: 2    muonTaggers: false   neighborName: ""},
+                                  {moduleName: "MT_0"   firstFEB: 28    sides: 1    muonTaggers: true    neighborName: ""}
+                                ]
+      specialTimeOffsets      : [
+                                  {feb: 0    timeOffset:   0.0},   //FEB1 is used as reference
+                                  {feb: 16   timeOffset: 112.0},   //FEB17 has 72ft longer cable (for testing purpose)
+                                  {feb: 24   timeOffset:   7.8},   //FEB25 has 5ft longer cable
+                                  {feb: 28   timeOffset:  34.0}    //FEB29 has 22ft longer cable
+                                ]
+      checkOppositeSides      : ["EX_0", "T2_0"]
     }
   }
 
   t1 : [ ]
-  e1 : [ CrvTimingStudies ]
+  e1 : [ CrvTimeOffsets ]
 
   trigger_paths  : [t1]
   end_paths      : [e1]
 
 }
 
-services.TFileService.fileName : "crvRecoExtracted.root"
+services.TFileService.fileName : "timeOffsetsExtracted.root"
 services.GeometryService.inputFile: "Offline/Mu2eG4/geom/geom_common_extracted.txt"
 services.ProditionsService.crvCalib.useDb: true
 services.ProditionsService.crvStatus.useDb: true
 #current status and calibration until we can use the database
-services.DbService.textFile : ["Offline/CRVConditions/data/status_extracted_20260221.txt","Offline/CRVConditions/data/calib_extracted_20260221.txt"]
+services.DbService.textFile : ["Offline/CRVConditions/data/status_extracted_20260630.txt","Offline/CRVConditions/data/calib_extracted_20260630.txt"]
 services.DbService.verbose : 0
