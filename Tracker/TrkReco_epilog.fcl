@@ -12,7 +12,7 @@ physics.producers.CosmicShowerFilter.ComboHitCollection : makeSH
 physics.producers.CosmicShowerFilter.maxTotalSameGap : 6
 physics.producers.CosmicShowerFilter.maxCrossingGap : 8
 physics.producers.CosmicShowerFilter.maxSameGap : 3
-physics.producers.CosmicShowerFilter.maxNPanel : 12
+physics.producers.CosmicShowerFilter.maxNPanel : 36
 physics.producers.CosmicShowerFilter.cutSingleLayer : true
 
 physics.producers.LineFinder.minPeak : 8
