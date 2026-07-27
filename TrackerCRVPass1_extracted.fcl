@@ -1,0 +1,126 @@
+
+#contact: R. Ehrlich
+
+#include "mu2e-trig-config/core/trigProducers.fcl"
+#include "Offline/fcl/standardProducers.fcl"
+#include "Offline/fcl/standardServices.fcl"
+#include "Offline/CRVResponse/fcl/prolog.fcl"
+#include "Production/JobConfig/reco/prolog.fcl"
+
+process_name : TrackerCRVPass1
+
+services :
+{
+  @table::Services.Core
+  @table::Services.Reco
+}
+
+source :
+{
+  module_type : RootInput
+  fileNames   : @nil
+  maxEvents   : -1
+}
+
+physics :
+{
+  producers :
+  {
+    @table::Reconstruction.producers
+    CrvDigi :
+    {
+      module_type   : CrvDigisFromArtdaqFragmentsFEBII
+      diagLevel     : 0
+      useROC4asROC2 : true
+    }
+    CrvRecoPulses: @local::CrvRecoPulses
+    CrvCoincidenceClusterFinder: @local::CrvCoincidenceClusterFinder
+  }
+  filters : @local::Reconstruction.filters
+  analyzers :
+  {
+    @table::Reconstruction.analyzers
+    CrvDQMcollector: @local::CrvDQMcollector
+  }
+
+  t1 : [ CrvDigi, CrvRecoPulses, CrvCoincidenceClusterFinder ]
+  e1 : [ CrvDQMcollector, outfileReco ]
+
+  trigger_paths  : [t1]
+  end_paths      : [e1]
+
+}
+
+#include "Offline/CRVReco/fcl/epilog_extracted.fcl"
+#physics.producers.CrvCoincidenceClusterFinder.ignoreSecondaryPulses : true
+
+services.GeometryService.inputFile : "Offline/Mu2eG4/geom/geom_common_extracted.txt"
+services.ProditionsService.crvStatus.useDb : true
+services.ProditionsService.crvCalib.useDb  : true
+services.TimeTracker.printSummary : true
+services.scheduler.wantSummary    : true
+services.message.destinations.log.outputStatistics : true
+
+outputs.KinematicLineOutput : {
+    @table::Reconstruction.Output
+    SelectEvents : [ "t1","RecoPath" ]
+    fileName: "rec.owner.description.version.sequencer.art"
+
+    outputCommands : [ "drop *_*_*_*",
+      @sequence::Reconstruction.GeneralProducts,
+      @sequence::Reconstruction.HighRecoProducts,
+      @sequence::Reconstruction.MidRecoProducts,
+      "keep *_DummyLumiInfo_*_*",
+      "keep *_TriggerResults_*_*",
+      "keep mu2e::CrvRecoPulses_*_*_*",
+      "keep mu2e::CrvDigis_*_*_*",
+      "keep mu2e::CrvDAQerrors_*_*_*",
+      "keep *_eventHeaderFromCFOFragment_*_*",
+      "keep mu2e::CrvCoincidenceClusters_*_*_*",
+      "keep mu2e::CrvStatuss_*_*_*",
+                      "drop artdaq::*_*_*_*" ,
+                       "drop mu2e::CrvDigis_*_NZS_*"
+    ]
+
+}
+
+physics.RecoPath : [ @sequence::Reconstruction.NoFieldPath ]
+physics.EndPath : [ KinematicLineOutput]
+physics.trigger_paths : [ t1, RecoPath]
+physics.end_paths : [ EndPath ]
+physics.analyzers.KLCompressionCheck.SelectEvents : [ "RecoPath" ]
+services.GeometryService.bFieldFile: "Offline/Mu2eG4/geom/bfgeom_no_field.txt"
+
+# final config
+#include "Production/JobConfig/reco/NoPileup_epilog.fcl"
+#include "Production/JobConfig/reco/OffSpillTiming_epilog.fcl"
+# #include "Production/JobConfig/reco/epilog.fcl"
+services.ProditionsService.alignedTracker.useDb: true
+services.ProditionsService.alignedTracker.verbose: 0
+services.ProditionsService.trackerStatus.Settings.useDb: true
+services.ProditionsService.trackerStatus.Settings.verbose: 0
+services.ProditionsService.strawElectronics.useDb: true
+services.ProditionsService.strawElectronics.verbose: 0
+# #include "Production/JobConfig/common/epilog.fcl"
+
+physics.producers.KKLine.ModuleSettings.SampleSurfaces : @local::Mu2eKinKal.producers.KKLine.ModuleSettings.SampleSurfaces
+
+physics.RecoPath: [
+  makeSH,
+  SimpleTimeCluster,
+  CosmicShowerFilter,
+  LineFinder,
+  KKLine,
+#  KLFilter,
+  SelectReco
+   ]
+
+#include "PassN/Tracker/TrkReco_epilog.fcl"
+#include "PassN/Tracker/TrkReco_calibrations.fcl"
+#include "PassN/Tracker/TrkRecoFromFragments_epilog.fcl"
+
+services.DbService.purpose : CRV_COMMISSIONING
+services.DbService.version : v1_0
+services.DbService.verbose : 0
+services.DbService.nearestMatch : true
+services.DbService.textFile : ["PassN/Tracker/TrkPanelMap.txt","PassN/Tracker/currentcalib.txt"]
